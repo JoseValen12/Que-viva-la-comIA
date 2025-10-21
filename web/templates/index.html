@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Que viva la comIA</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      background: #050816;
+      color: #e5e7eb;
+    }
+
+    .wrap {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(900px, 100%);
+      background: #0b1020;
+      border: 1px solid #1c2540;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 12px 0 6px 0;
+    }
+
+    .sub {
+      margin: 0 0 16px 0;
+      color: #94a3b8;
+    }
+
+    input[type="file"] {
+      margin: 8px 0;
+    }
+
+    button {
+      background: #1c64f2;
+      color: #fff;
+      border: 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    button:hover:not(:disabled) {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 16px;
+      background: #0b1020;
+      border: 1px dashed #26324d;
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 48px;
+      white-space: pre-wrap;
+    }
+
+    img#preview {
+      max-width: 100%;
+      border-radius: 12px;
+      display: none;
+      margin-top: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 6px 0;
+      flex-wrap: wrap;
+    }
+
+    input.text,
+    select.text {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #26324d;
+      background: #0b1020;
+      color: #e5e7eb;
+    }
+
+    label small {
+      color: #94a3b8;
+    }
+
+    #allergies-panel {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+      margin-inline: 0;
+    }
+
+    #allergies-panel h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      color: #cbd5e1;
+      text-align: center;
+    }
+
+    #allergies-panel small {
+      display: block;
+      margin-top: 0.6rem;
+      color: #64748b;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .allergy-section {
+      text-align: center;
+      margin: 20px auto;
+      max-width: 900px;
+    }
+
+    .allergy-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 14px;
+      margin-top: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #2b3b63;
+      background: #111829;
+      color: #e5eaff;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .pill:hover {
+      background: #1b2645;
+    }
+
+    .pill.is-active {
+      background: linear-gradient(145deg, #2563eb, #1d4ed8);
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      transform: scale(1.08);
+    }
+
+    #btnMyRecipes {
+      display: block;
+      margin: 1rem auto 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" width="80" height="80" />
+      <h1>Que viva la comIA</h1>
+      <p class="sub">Sube una imagen y guarda el acierto (no guardamos recetas). Más tarde, pide las recetas basadas en
+        lo guardado.</p>
+
+      <input type="file" id="file" accept="image/*" />
+      <br />
+      <button id="btn">Predecir</button>
+      <img id="preview" />
+
+      <div class="result" id="result">Resultado aparecerá aquí…</div>
+
+      <div style="margin-top:12px" id="actions"></div>
+
+      <div class="row" style="margin-top:16px">
+        <label>Recetas por ingrediente:&nbsp;
+          <input id="perClass" class="text" type="number" value="5" min="1" max="50" style="width:110px" />
+        </label>
+      </div>
+
+      <section id="allergies-panel">
+        <div class="allergy-section">
+          <h3>Filtrar por alergias</h3>
+          <div class="allergy-pills">
+            <button class="pill" data-key="gluten">Gluten</button>
+            <button class="pill" data-key="frutos_secos">Frutos Secos</button>
+            <button class="pill" data-key="lactosa">Lactosa</button>
+            <button class="pill" data-key="huevo">Huevo</button>
+            <button class="pill" data-key="marisco">Marisco</button>
+            <button class="pill" data-key="moluscos">Moluscos</button>
+            <button class="pill" data-key="pescado">Pescado</button>
+            <button class="pill" data-key="apio">Apio</button>
+            <button class="pill" data-key="mostaza">Mostaza</button>
+          </div>
+          <p>Puedes seleccionar varias alergias.</p>
+        </div>
+      </section>
+
+      <button id="btnMyRecipes">Ver recetas de lo guardado</button>
+
+      <div class="result" id="recipes" style="margin-top:12px">Recetas aparecerán aquí…</div>
+    </div>
+  </div>
+
+  <script>
+    const $file = document.getElementById("file");
+    const $btn = document.getElementById("btn");
+    const $res = document.getElementById("result");
+    const $img = document.getElementById("preview");
+    const $actions = document.getElementById("actions");
+    const $recipes = document.getElementById("recipes");
+    const $btnMyRecipes = document.getElementById("btnMyRecipes");
+    const $perClass = document.getElementById("perClass");
+    let lastTop5 = null;
+
+    $file.addEventListener("change", () => {
+      const f = $file.files?.[0];
+      if (!f) return;
+      const url = URL.createObjectURL(f);
+      $img.src = url;
+      $img.style.display = "block";
+      $res.textContent = "Resultado aparecerá aquí…";
+      $actions.innerHTML = "";
+      $recipes.textContent = "Buscando recetas basadas en tus ingredientes…";
+    });
+
+    $btn.addEventListener("click", async () => {
+      const f = $file.files?.[0];
+      if (!f) { $res.textContent = "⚠️ Selecciona una imagen primero."; return; }
+
+      const fd = new FormData();
+      fd.append("image", f);
+
+      $btn.disabled = true;
+      $res.textContent = "Calculando…";
+      try {
+        const r = await fetch("/predict", { method: "POST", body: fd });
+        const data = await r.json();
+        if (!r.ok || !data.ok) throw new Error(data.error || ("HTTP " + r.status));
+
+        lastTop5 = data.top5 || [];
+        const lines = lastTop5.map((d, i) => `${i + 1}. ${d.class} — ${(d.score * 100).toFixed(2)}%`);
+        $res.textContent = "✅ Top-5:\n" + lines.join("\n");
+        renderActions(lastTop5); // ← ahora se autoselecciona la primera
+      } catch (err) {
+        console.error(err);
+        $res.textContent = "❌ Error: " + err.message;
+        $actions.innerHTML = "";
+      } finally {
+        $btn.disabled = false;
+      }
+    });
+
+    // --- Alergias: recogemos las claves (snake_case) para que coincidan con el backend
+    function getSelectedAllergies() {
+      return Array.from(document.querySelectorAll(".pill.is-active"))
+        .map(b => b.getAttribute("data-key"))
+        .filter(Boolean);
+    }
+
+    document.querySelectorAll(".pill").forEach(btn => {
+      btn.addEventListener("click", () => btn.classList.toggle("is-active"));
+    });
+
+    $btnMyRecipes.addEventListener("click", async () => {
+      const perClass = parseInt($perClass.value || "5", 10);
+      const allergies = getSelectedAllergies();
+      $recipes.textContent = "Buscando recetas basadas en tus ingredientes…";
+      try {
+        const r = await fetch(`/my_recipes?per_class=${perClass}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ allergies })
+        });
+        const data = await r.json();
+        if (!r.ok || !data.ok) throw new Error(data.error || ("HTTP " + r.status));
+        renderGroupedRecipes(data.data);
+      } catch (err) {
+        $recipes.textContent = "❌ Error al obtener recetas: " + err.message;
+      }
+    });
+
+    async function fetchSavedIngredients() {
+      const r = await fetch("/ingredients");
+      const data = await r.json();
+      if (!r.ok || !data.ok) throw new Error(data.error || ("HTTP " + r.status));
+      return (data.items || []).map(it => it.name);
+    }
+
+    async function populateSavedSelect() {
+      const $sel = document.getElementById("savedIngSelect");
+      if (!$sel) return;
+      try {
+        const names = await fetchSavedIngredients();
+        $sel.innerHTML = names.length
+          ? names.map(n => `<option value="${n}">${n}</option>`).join("")
+          : `<option value="">(No hay ingredientes guardados)</option>`;
+      } catch {
+        $sel.innerHTML = `<option value="">(Error cargando ingredientes)</option>`;
+      }
+    }
+
+    function wireDeleteBlock() {
+      const $delBtn = document.getElementById("deleteIngBtn");
+      const $sel = document.getElementById("savedIngSelect");
+      if (!$delBtn || !$sel) return;
+      $delBtn.addEventListener("click", async () => {
+        const name = ($sel.value || "").trim();
+        if (!name) { alert("No hay ingrediente seleccionado."); return; }
+        try {
+          const r = await fetch("/ingredients/" + encodeURIComponent(name), { method: "DELETE" });
+          const data = await r.json();
+          if (!r.ok || !data.ok) throw new Error(data.error || ("HTTP " + r.status));
+          $recipes.textContent = "🗑️ Ingrediente eliminado: " + name;
+          await populateSavedSelect();
+        } catch (err) {
+          $recipes.textContent = "❌ Error al eliminar ingrediente: " + err.message;
+        }
+      });
+    }
+
+    // --- NUEVA versión con radio buttons y selección automática de la primera
+    function renderActions(top5) {
+      const deleteBlock = `
+        <div class="row" style="margin-top:8px">
+          <select id="savedIngSelect" class="text" style="min-width:220px"></select>
+          <button id="deleteIngBtn">Eliminar ingrediente</button>
+        </div>
+      `;
+
+      if (!top5 || !top5.length) {
+        $actions.innerHTML = deleteBlock;
+        wireDeleteBlock();
+        populateSavedSelect();
+        return;
+      }
+
+      $actions.innerHTML = `
+        <div>
+          ${top5.map((d, i) => `
+            <div class="row">
+              <label>
+                <input type="radio" name="predChoice" value="${d.class}" ${i === 0 ? "checked" : ""}>
+                ${i + 1}. ${d.class} — ${(d.score * 100).toFixed(2)}%
+              </label>
+            </div>
+          `).join("")}
+          <button id="saveChoiceBtn">Guardar selección</button>
+        </div>
+        ${deleteBlock}
+      `;
+
+      const $saveBtn = document.getElementById("saveChoiceBtn");
+      $saveBtn.addEventListener("click", async () => {
+        const selected = document.querySelector("input[name='predChoice']:checked")?.value;
+        if (!selected) { alert("Selecciona una opción."); return; }
+        try {
+          const r = await fetch("/ingredients", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: selected })
+          });
+          const data = await r.json();
+          if (!r.ok || !data.ok) throw new Error(data.error || ("HTTP " + r.status));
+          $recipes.textContent = data.created
+            ? `✅ Guardado: ${selected}`
+            : `ℹ️ ${selected} ya estaba guardado.`;
+          await populateSavedSelect();
+        } catch (err) {
+          $recipes.textContent = "❌ Error al guardar: " + err.message;
+        }
+      });
+
+      wireDeleteBlock();
+      populateSavedSelect();
+    }
+
+    function renderGroupedRecipes(grouped) {
+      const classes = Object.keys(grouped || {});
+      if (!classes.length) {
+        $recipes.textContent = "😕 No hay ingredientes guardados todavía.";
+        return;
+      }
+      const html = classes.map(cls => {
+        const list = grouped[cls] || [];
+        if (!list.length) return `<div style="margin-bottom:12px"><h3>${cls}</h3><p>Sin recetas disponibles.</p></div>`;
+        const rows = list.map(r => {
+          const nombre = r.Nombre ?? "(Sin nombre)";
+          const cat = r.Categoria ?? "";
+          const val = (r.Valoracion ?? "").toString();
+          const ingr = r.Ingredientes ?? r["Lista de ingredientes"] ?? "";
+          const link = r.Link_receta || r.Link || r.URL || "";
+          const linkHtml = link ? `<br/><a href="${link}" target="_blank" style="color:#3b82f6">Ver receta completa 🔗</a>` : "";
+          return `<li><strong>${nombre}</strong> — <em>${cat}</em>${val ? ` · ⭐ ${val}` : ""}<br/><small>${ingr}</small>${linkHtml}</li>`;
+        }).join("");
+        return `<div style="margin-bottom:12px"><h3>${cls}</h3><ul>${rows}</ul></div>`;
+      }).join("");
+      $recipes.innerHTML = html;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderActions(null);
+    });
+  </script>
+</body>
+
+</html>

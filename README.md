@@ -1,7 +1,4 @@
 # Que-viva-la-comIA
-Claro, aquí tienes tu texto corregido y con un formato estructurado ideal para un archivo `README.md` en GitHub, manteniendo la esencia de tus palabras.
-
----
 
 ### **Descripción del Proyecto**
 
